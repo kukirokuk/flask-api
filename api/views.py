@@ -1,30 +1,8 @@
-
 from flask import Flask, request, jsonify, render_template
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
-import os
+from wtforms.validators import ValidationError
 
-
-app = Flask(__name__)
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'entryDB.sqlite')
-db = SQLAlchemy(app)
-ma = Marshmallow(app)
-
-class Entry(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(80))
-    value = db.Column(db.String(80))
-
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-
-class EntrySchema(ma.Schema):
-    class Meta:
-        fields = ('key', 'value')
-
-entry_schema = EntrySchema()
+from api import app, db
+from api.models import entry_schema, Entry
 
 @app.route("/set/", methods=["GET", "POST"])
 def set_entry():
@@ -44,11 +22,8 @@ def set_entry():
                 entry = Entry(key=key, value=value)
                 db.session.add(entry)
                 db.session.commit()
-                if request.is_xhr:
-                    return render_template('set.html', value=entry_schema.jsonify(entry))
-                return entry_schema.jsonify(entry)
-            else:
-                return jsonify({'value': 'The entry with key {} has already been created'.format(key)})
+                return jsonify({'value': 'The entry with key {} was succesfully created'.format(key)})
+            return jsonify({'value': 'The entry {} already exist'.format(key)})
         else:
             return jsonify({'value': 'Data structure must be {"key": "your key", "value": "your value"}'}), 400
     elif request.method == 'GET':
@@ -65,8 +40,3 @@ def get_entry(key=None):
         return entry_schema.jsonify(entry)
     else:
         return jsonify({'value': 'No value with this key in db'})
-
-
-if __name__ == '__main__':
-    app.run(host='localhost', port=8080, debug=True)
-
