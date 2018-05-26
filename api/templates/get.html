@@ -1,19 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Get page</title>
-</head>
-<body>
-    <h1> Here you can enter a key to get a value from db </h1>
+{% extends "layout.html" %}
+{% block content %}
 
-    <h4> Enter a key </h4>
-    <p>key: <input type="text" id="key" name="key"></p>
-    <button id='get-value'>Get</button>
-    <h2>Value</h2>
-    <ul id=value></ul>
-
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
-    <script src="/static/main.js"></script>
-</body>
-</html>
+	    <h1> Here you can enter a key to get a value from db </h1>
+	    <h4> Enter a key </h4>
+	    <p>key: <input type="text" id="key" name="key"></p>
+	    <button id='get-value'>Get</button>
+	    <h2>Value</h2>
+			    <ul id=value></ul>
+{% endblock content %}

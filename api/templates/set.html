@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Set page</title>
-</head>
-<body>
+
+{% extends "layout.html" %}
+{% block content %}
+
     <h1> Here you can set some value to the key and save it to db </h1>
 
     <h4> Enter a key </h4>
@@ -13,8 +11,4 @@
     <button id='set-value'>Set</button>
     <ul id=message>Value: {{ value }}</ul>
 
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
-    <script src="/static/set.js"></script>
-</body>
-</html>
+{% endblock content %}
