@@ -1,14 +1,10 @@
-
 {% extends "layout.html" %}
 {% block content %}
-
-    <h1> Here you can set some value to the key and save it to db </h1>
-
+    <h1> Here you can set some value to the key </h1>
     <h4> Enter a key </h4>
-    <p>key: <input type="text" id="set-key" name="key"></p>
+    <p><input type="text" id="set-key" name="key"></p>
     <h4> Enter a value </h4>
-    <p>value: <input type="text" id="set-value" name="key"></p>
-    <button id='set-value'>Set</button>
-    <ul id=message>Value: {{ value }}</ul>
-
+    <p><input type="text" id="set-value" name="key"></p>
+    <button id='set'>Set</button>
+    <ul id=message></ul>
 {% endblock content %}

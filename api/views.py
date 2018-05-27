@@ -7,39 +7,45 @@ from api.models import entry_schema, Entry, User
 from flask_login import login_user, current_user, logout_user, login_required
 
 @app.route("/set/", methods=["GET", "POST"])
-@login_required
+# @login_required
 def set_entry():
     if request.method == 'POST':
         json_data = request.get_json()
-        if json_data and 'key' in request.json and 'value' in request.json:
+        if json_data and request.json.get('key', 0) and request.json.get('value', 0):
             try:
-                if request.is_xhr:
-                    data = entry_schema.load(json_data)[0]
-                else:
-                    data = entry_schema.load(json_data)
+                data = entry_schema.load(json_data)[0]
             except ValidationError as err:
                 return jsonify(err.messages), 422
-            key, value, user_id = data['key'], data['value'], current_user.id
-            entry = Entry.query.filter_by(key=key).first()
-            if entry is None:
-                entry = Entry(key=key, value=value, user_id=user_id)
-                db.session.add(entry)
-                db.session.commit()
+            if bool(current_user.__dict__):
+                user_id = current_user.id
+            else:
+                user_id = 0
+            key, value = data['key'], data['value']
+            db_entry = Entry.query.filter_by(key=key, user_id=user_id).first()
+            income_entry = Entry(key=key, value=value, user_id=user_id)
+            db.session.add(income_entry)
+            db.session.commit()
+            if db_entry is None:
                 return jsonify({'value': 'The entry with key {} was succesfully created'.format(key)})
-            return jsonify({'value': 'The entry {} already exist'.format(key)})
+            return jsonify({'value': 'The entry {} already existed and was succesfully reassigned'.format(key)})
         else:
-            return jsonify({'value': 'Data structure must be {"key": "your key", "value": "your value"}'}), 400
+            if request.is_xhr:
+                return jsonify({'value': 'Please enter kay and value'})
+            return jsonify({'value': 'Data structure must be {"key": "your key", "value": "your value"}'})
     elif request.method == 'GET':
         return render_template('set.html')
 
 @app.route("/get/", methods=["GET"])
 @app.route("/get/<key>", methods=["GET"])
-@login_required
+# @login_required
 def get_entry(key=None):
     if key is None and not request.is_xhr:
         return render_template('get.html')
-
-    entry = Entry.query.filter_by(key=key).first()
+    if bool(current_user.__dict__):
+        user_id = current_user.id
+    else:
+        user_id = 1
+    entry = Entry.query.filter_by(key=key, user_id=user_id).first()
     if entry:
         return entry_schema.jsonify(entry)
     else:
@@ -82,7 +88,6 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-@login_required
 @app.route("/account")
 @login_required
 def account():
