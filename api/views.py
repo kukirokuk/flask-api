@@ -1,57 +1,55 @@
-from flask import jsonify, render_template, url_for, flash, redirect, request
-from wtforms.validators import ValidationError
+from flask import jsonify, render_template, url_for, flash, redirect, request, g
+from flask_login import login_user, current_user, logout_user, login_required
 
 from api import app, db, bcrypt
 from api.forms import RegistrationForm, LoginForm
 from api.models import entry_schema, Entry, User
-from flask_login import login_user, current_user, logout_user, login_required
+from api.utils import (
+    set_entry_processing,
+    get_entry_processing,
+    custom_auth,
+    get_redirect_target
+)
+
+
+### API views
 
 @app.route("/set/", methods=["GET", "POST"])
-# @login_required
+@custom_auth
 def set_entry():
-    if request.method == 'POST':
-        json_data = request.get_json()
-        if json_data and request.json.get('key', 0) and request.json.get('value', 0):
-            try:
-                data = entry_schema.load(json_data)[0]
-            except ValidationError as err:
-                return jsonify(err.messages), 422
-            if bool(current_user.__dict__):
-                user_id = current_user.id
-            else:
-                user_id = 0
-            key, value = data['key'], data['value']
-            db_entry = Entry.query.filter_by(key=key, user_id=user_id).first()
-            income_entry = Entry(key=key, value=value, user_id=user_id)
-            db.session.add(income_entry)
-            db.session.commit()
-            if db_entry is None:
-                return jsonify({'value': 'The entry with key {} was succesfully created'.format(key)})
-            return jsonify({'value': 'The entry {} already existed and was succesfully reassigned'.format(key)})
-        else:
-            if request.is_xhr:
-                return jsonify({'value': 'Please enter kay and value'})
-            return jsonify({'value': 'Data structure must be {"key": "your key", "value": "your value"}'})
-    elif request.method == 'GET':
-        return render_template('set.html')
+    # login auth 
+    if current_user.is_authenticated:
+        if request.method == 'POST':
+            return set_entry_processing(current_user.id)
+        elif request.method == 'GET':
+            return render_template('set.html')
+    # api_key or base auth
+    if g.get('user'):
+        return set_entry_processing(g.get('user').id)
+    return redirect(url_for('login'))
+
 
 @app.route("/get/", methods=["GET"])
 @app.route("/get/<key>", methods=["GET"])
-# @login_required
+@custom_auth
 def get_entry(key=None):
-    if key is None and not request.is_xhr:
-        return render_template('get.html')
-    if bool(current_user.__dict__):
-        user_id = current_user.id
-    else:
-        user_id = 1
-    entry = Entry.query.filter_by(key=key, user_id=user_id).first()
-    if entry:
-        return entry_schema.jsonify(entry)
-    else:
-        return jsonify({'value': 'No value with this key in db'})
+    #TODO take access to the current_user variable in custom_auth decorator to get rid of excess if statements
+    # login auth
+    if current_user.is_authenticated:
+        if key is None and not request.is_xhr:
+            return render_template('get.html')
+        return get_entry_processing(current_user.id, key)
 
-### register views
+    # api_key or base auth
+    if g.get('user'):
+        return get_entry_processing(g.user.id, key)
+
+    #redirect to login if no auth
+    return redirect(url_for('login'))
+
+
+### Register views
+
 @app.route("/register", methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -76,8 +74,8 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('set_entry'))
+            next_page = get_redirect_target()
+            return redirect(next_page or url_for('login'))
         else:
             flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('login.html', title='Login', form=form)
