@@ -30,5 +30,9 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(60), nullable=False)
     entries = db.relationship('Entry', backref='author', lazy=True)
 
+    def __init__(self, username, email, password):
+        self.username = username
+        self.email = email
+        self.password = password
     def __repr__(self):
-        return f"User('{self.username}', '{self.email}')"
+        return "User('{}', '{}')".format(self.username, self.email)
