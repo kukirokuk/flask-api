@@ -40,7 +40,8 @@ def custom_auth(func):
     @wraps(func)
     def wrap(*args, **kwargs):
         """ Auth decorator that checks user authentication through url args 'api_key' and
-        'username' and add user authenticated user object to the flask g context 
+        'username' also as via  headers basic auth and add user authenticated user object 
+        to the flask g context object
         """
 
         # first, try to login using the username and api_key (user password) as url args\
