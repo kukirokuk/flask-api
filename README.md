@@ -40,3 +40,7 @@ To make a set request you should provide a json body for request `http://127.0.0
 	"value": "new_value"
 }
 ```
+To run tests:
+```sh
+python tests.py
+```
