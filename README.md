@@ -21,7 +21,7 @@ And finally start server:
 ```sh
 python run.py
 ```
-If you are runing this app on local host than it will be available on this url `http://127.0.0.1:8080`
+If you are runing this app on local host than it will be available on this url `http://0.0.0.0:8080`
 You can interact with it both with frontend web page and json request.
 To use its frontend web pages you need to login here `http://<your_host>:<your_port>/login`.  Afteer login you willl be able 
 visit its pages, submit keys, values and get values `http://<your_host>:<your_port>/get`,  `http://<your_host>:<your_port>/set`.
